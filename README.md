@@ -1,5 +1,5 @@
-A server for the (Extreme Startup
-competition)[https://github.com/rchatley/extreme_startup].
+A server for the [Extreme Startup
+competition](https://github.com/rchatley/extreme_startup).
 
 The server removes the need to handle any webservice part of the competition.
 An executable that handles the actual answering of questions can be hotswapped,
