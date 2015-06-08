@@ -1,9 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-
-------------------------------------------------------------------------------
--- | This module is where all the routes and handlers are defined for your
--- site. The 'app' function is the initializer that combines everything
--- together and is exported by this module.
 module Site
   ( answerer
   ) where
@@ -19,6 +14,8 @@ import           AnswerSnaplet
 
 
 ------------------------------------------------------------------------------
+
+-- | The handler which handles questions: /?q="question"
 handleQuestion = do
  mq <- getParam "q"
  case mq of
@@ -33,6 +30,7 @@ handleQuestion = do
        (Just ans) -> 
          writeBS (B.pack ans)
 
+-- | The handler which handles /update
 handleUpdate = do 
   setUpdate
   writeBS "Set to update\n"

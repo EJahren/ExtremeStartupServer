@@ -1,9 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-------------------------------------------------------------------------------
--- | This module defines our application's state type and an alias for its
--- handler monad.
+-- | A simple snaplet to handle the answerer executable.
 module AnswerSnaplet where
 
 ------------------------------------------------------------------------------
@@ -20,7 +18,15 @@ import Control.Monad.State
 
 
 ----------------------------------------------------------------------------
-moveInAnswerer :: FilePath -> FilePath -> FilePath -> IO ()
+-- Some handy io utilities
+----------------------------------------------------------------------------
+
+-- | Moves in the answerer from the given location to the new location.
+moveInAnswerer :: 
+ FilePath -> -- ^ The location of log file
+ FilePath -> -- ^ The location of the executable
+ FilePath -> -- ^ Where to move the executable
+ IO ()
 moveInAnswerer logLoc oldLoc newLoc = do
   exAns <- doesFileExist oldLoc
   if not exAns
@@ -33,6 +39,7 @@ moveInAnswerer logLoc oldLoc newLoc = do
       putStrLn "Moving in new answerer"
       copyFile oldLoc newLoc
 
+-- | Small utility to spawn a process with pipes to std_in and std_out.
 spawnProcess fp = do
   (Just inh,Just outh,_,prc) <-
     createProcess (proc fp []){
@@ -41,6 +48,9 @@ spawnProcess fp = do
   return (inh,outh,prc)
 
 ------------------------------------------------------------------------------
+-- Make the Answerer Snaplet
+-----------------------------------------------------------------------------
+
 data Answerer = Answerer
     { _answererOrigLocation :: FilePath,
       _answererTmpLocation :: FilePath,
@@ -60,11 +70,12 @@ initAnswerer fp =
     return (Answerer answererLoc tmpLoc logLoc up)
 
 makeLenses ''Answerer
-------------------------------------------------------------------------------
 
 type AnswerHandler = Handler Answerer Answerer
+------------------------------------------------------------------------------
+-- The Answerer snaplet api
 
-
+-- | Triggers an update if one has been requested
 checkForUpdate :: AnswerHandler ()
 checkForUpdate = do
   newLoc <- gets _answererTmpLocation
@@ -77,11 +88,13 @@ checkForUpdate = do
   liftIO $ atomicWriteIORef upRef False
         
          
+-- | set to update next time checkForUpdate is called
 setUpdate :: AnswerHandler ()
 setUpdate = do
   up <- gets _doUpdate
   liftIO $ atomicWriteIORef up True
 
+-- | ask the answerer a question
 askQuestion :: String -> AnswerHandler (Maybe String)
 askQuestion str = do
   fp <- gets _answererTmpLocation
@@ -98,6 +111,7 @@ askQuestion str = do
     return (read reply)
     
 
+-- | write the given string to the log
 logAnswerer :: String -> AnswerHandler ()
 logAnswerer str = do 
   l <- gets _logLocation
